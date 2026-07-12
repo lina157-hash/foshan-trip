@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#12372A" />
+  <meta name="description" content="2026 佛山之旅：航班、住宿、行程、旅伴與共同記帳。" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon-192.png" />
+  <title>佛山之旅 2026</title>
+  <style>
+    :root{
+      --ink:#173329; --muted:#6f7f78; --green:#12372A; --green2:#2f6a54;
+      --cream:#f6f1e8; --paper:#fffdf8; --gold:#c9954b; --line:#e7dfd1;
+      --red:#a74343; --shadow:0 18px 50px rgba(18,55,42,.12);
+      --safe-bottom:max(14px, env(safe-area-inset-bottom));
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0; color:var(--ink); background:
+      radial-gradient(circle at top right, rgba(201,149,75,.18), transparent 28rem),
+      linear-gradient(180deg,#f4efe5 0%,#fbf8f1 34%,#f6f1e8 100%);
+      font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+      min-height:100vh;
+    }
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    .app{max-width:760px;margin:auto;min-height:100vh;padding-bottom:96px}
+    .hero{
+      margin:0 14px; padding:22px 20px 18px; color:white; overflow:hidden;
+      border-radius:0 0 30px 30px; position:relative; min-height:300px;
+      background:linear-gradient(145deg,#102f25,#1d5843 60%,#2f6a54);
+      box-shadow:var(--shadow);
+    }
+    .hero:before,.hero:after{content:"";position:absolute;border-radius:50%;border:1px solid rgba(255,255,255,.12)}
+    .hero:before{width:280px;height:280px;right:-100px;top:-110px}
+    .hero:after{width:210px;height:210px;right:-55px;top:-70px}
+    .eyebrow{letter-spacing:.18em;font-size:.72rem;text-transform:uppercase;opacity:.72;font-weight:700}
+    h1{font-family:"Noto Serif TC","Songti TC",serif;font-size:2.15rem;line-height:1.05;margin:16px 0 8px;letter-spacing:.06em}
+    .hero-sub{margin:0;opacity:.84;font-size:.92rem}
+    .countdown{display:flex;gap:8px;align-items:baseline;margin-top:22px}
+    .countdown strong{font-family:Georgia,serif;font-size:2.8rem;font-weight:500}
+    .countdown span{font-size:.85rem;opacity:.8}
+    .skyline{position:absolute;right:14px;bottom:5px;width:48%;height:125px;opacity:.45}
+    .hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:22px;position:relative;z-index:2}
+    .hero-stat{padding:11px 6px;border-radius:15px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);text-align:center;backdrop-filter:blur(8px)}
+    .hero-stat b{display:block;font-family:Georgia,serif;font-size:1.2rem}
+    .hero-stat small{opacity:.72;font-size:.65rem}
+    .toolbar{display:flex;gap:8px;padding:14px 16px 0}
+    .pill{border:1px solid var(--line);background:rgba(255,253,248,.82);color:var(--ink);padding:9px 12px;border-radius:999px;font-size:.78rem;font-weight:700;box-shadow:0 8px 20px rgba(18,55,42,.06)}
+    .pill.primary{background:var(--gold);color:white;border-color:transparent}
+    main{padding:4px 14px}
+    section{display:none;animation:fade .22s ease}
+    section.active{display:block}
+    @keyframes fade{from{opacity:.5;transform:translateY(4px)}to{opacity:1;transform:none}}
+    .section-head{display:flex;justify-content:space-between;align-items:end;margin:24px 4px 12px}
+    .section-head h2{font-family:"Noto Serif TC","Songti TC",serif;font-size:1.45rem;margin:0}
+    .section-head p{margin:4px 0 0;color:var(--muted);font-size:.78rem}
+    .card{background:rgba(255,253,248,.95);border:1px solid rgba(231,223,209,.9);border-radius:22px;padding:17px;margin:10px 0;box-shadow:0 12px 35px rgba(18,55,42,.06)}
+    .card-label{font-size:.67rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:800}
+    .route{display:grid;grid-template-columns:1fr 58px 1fr;align-items:center;margin-top:14px}
+    .airport:last-child{text-align:right}
+    .airport .time{font-family:Georgia,serif;font-size:1.65rem}
+    .airport .code{font-size:1.1rem;font-weight:900;margin-top:2px}
+    .airport .city{color:var(--muted);font-size:.72rem}
+    .plane-line{text-align:center;color:var(--green2);position:relative;font-size:1.2rem}
+    .plane-line:before{content:"";height:1px;background:var(--line);position:absolute;left:0;right:0;top:50%;z-index:0}
+    .plane-line span{position:relative;background:var(--paper);padding:0 7px;z-index:1}
+    .meta-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:15px}
+    .tag{font-size:.7rem;padding:7px 9px;background:#f0eadf;border-radius:10px;color:#53645d}
+    .hotel-top{display:flex;justify-content:space-between;gap:14px}
+    .hotel-title{font-size:1.15rem;font-weight:900;margin:5px 0}
+    .hotel-address{font-size:.78rem;line-height:1.55;color:var(--muted)}
+    .hotel-badge{width:54px;height:54px;border-radius:17px;background:linear-gradient(145deg,var(--gold),#e2b776);color:white;display:grid;place-items:center;font-size:1.4rem;flex:none}
+    .nearby{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:14px}
+    .nearby div{background:#f4efe6;padding:10px;border-radius:12px;font-size:.73rem}
+    .nearby b{display:block;font-size:.95rem;margin-bottom:2px}
+    .action-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+    .btn{border:0;padding:10px 13px;border-radius:12px;background:var(--green);color:white;font-size:.78rem;font-weight:800}
+    .btn.secondary{background:#e9e1d4;color:var(--ink)}
+    .btn.danger{background:#f5dddd;color:var(--red)}
+    .day-tabs{display:flex;gap:8px;overflow:auto;padding:2px 2px 8px;scrollbar-width:none}
+    .day-tabs::-webkit-scrollbar{display:none}
+    .day-tab{border:1px solid var(--line);background:var(--paper);padding:10px 12px;border-radius:14px;min-width:72px;color:var(--muted);font-size:.72rem}
+    .day-tab strong{display:block;color:var(--ink);font-size:.92rem;margin-top:2px}
+    .day-tab.active{background:var(--green);color:#dbe9e3;border-color:var(--green)}
+    .day-tab.active strong{color:white}
+    .day-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .day-title h3{margin:0;font-size:1.12rem}
+    .timeline{position:relative;margin-top:10px}
+    .timeline:before{content:"";position:absolute;left:49px;top:8px;bottom:8px;width:1px;background:var(--line)}
+    .event{display:grid;grid-template-columns:42px 14px 1fr;gap:8px;position:relative;padding:8px 0}
+    .event-time{font-family:Georgia,serif;font-size:.78rem;padding-top:4px;color:var(--muted)}
+    .dot{width:9px;height:9px;border-radius:50%;background:var(--gold);border:2px solid var(--paper);box-shadow:0 0 0 2px var(--gold);margin-top:4px;z-index:1}
+    .event-body{background:#f4efe6;border-radius:14px;padding:10px 12px;min-height:48px}
+    .event-body strong{display:block;font-size:.9rem}
+    .event-body small{display:block;color:var(--muted);margin-top:3px;line-height:1.45}
+    .event-tools{margin-top:7px;display:flex;gap:10px}
+    .link-btn{border:0;background:none;padding:0;color:var(--green2);font-size:.67rem;font-weight:800}
+    .empty{padding:30px 10px;text-align:center;color:var(--muted);font-size:.82rem}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .mini-card{background:#f4efe6;padding:13px;border-radius:16px}
+    .mini-card b{font-size:1.1rem}
+    .mini-card small{display:block;color:var(--muted);margin-top:4px}
+    .traveler{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--line)}
+    .traveler:last-child{border-bottom:0}
+    .avatar{width:39px;height:39px;border-radius:50%;display:grid;place-items:center;background:#e8dfcf;font-family:Georgia,serif;font-weight:700;color:var(--green)}
+    .traveler input{border:0;background:transparent;outline:none;font-weight:800;color:var(--ink);width:100%}
+    .traveler small{display:block;color:var(--muted);font-size:.7rem}
+    .check-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+    .check-item:last-child{border-bottom:0}
+    .check-item input{width:19px;height:19px;accent-color:var(--green)}
+    .check-item.done span{text-decoration:line-through;color:#98a19d}
+    .expense-form{display:grid;grid-template-columns:1.4fr .8fr .7fr;gap:7px}
+    .field{width:100%;border:1px solid var(--line);border-radius:12px;background:white;padding:10px 11px;color:var(--ink);outline:none}
+    .field:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,149,75,.12)}
+    .expense{display:grid;grid-template-columns:1fr auto;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+    .expense:last-child{border:0}
+    .expense strong{display:block}
+    .expense small{color:var(--muted)}
+    .expense .amount{text-align:right;font-family:Georgia,serif}
+    .summary-box{background:linear-gradient(145deg,#173f31,#285e49);color:white;border-radius:20px;padding:18px;margin-bottom:10px}
+    .summary-box small{opacity:.7}
+    .summary-total{font-family:Georgia,serif;font-size:2rem;margin:5px 0 12px}
+    .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .summary-grid div{padding:10px;background:rgba(255,255,255,.08);border-radius:12px}
+    .note{font-size:.7rem;line-height:1.6;color:var(--muted);margin:9px 2px}
+    .bottom-nav{
+      position:fixed;z-index:50;left:50%;transform:translateX(-50%);bottom:0;width:min(760px,100%);
+      padding:8px 10px var(--safe-bottom);display:grid;grid-template-columns:repeat(5,1fr);
+      background:rgba(255,253,248,.94);border-top:1px solid var(--line);backdrop-filter:blur(18px);
+    }
+    .nav-btn{border:0;background:none;color:#7d8984;padding:5px 3px;border-radius:13px;font-size:.62rem}
+    .nav-btn .ico{display:block;font-size:1.18rem;margin-bottom:2px}
+    .nav-btn.active{color:var(--green);background:#eee7db;font-weight:900}
+    .modal{display:none;position:fixed;inset:0;z-index:100;background:rgba(13,33,25,.52);padding:20px;align-items:flex-end;justify-content:center}
+    .modal.open{display:flex}
+    .modal-card{width:min(600px,100%);background:var(--paper);border-radius:24px;padding:20px;box-shadow:var(--shadow);max-height:90vh;overflow:auto}
+    .modal-card h3{margin:0 0 14px}
+    .form-grid{display:grid;gap:10px}
+    .form-grid label{font-size:.72rem;color:var(--muted)}
+    .form-grid label .field{display:block;margin-top:4px}
+    .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+    .toast{position:fixed;left:50%;bottom:92px;transform:translate(-50%,20px);background:#183c2f;color:white;padding:10px 14px;border-radius:999px;font-size:.75rem;opacity:0;pointer-events:none;transition:.25s;z-index:120}
+    .toast.show{opacity:1;transform:translate(-50%,0)}
+    @media(max-width:420px){
+      .hero{margin:0;border-radius:0 0 28px 28px}
+      .hero-stats{gap:5px}.hero-stat{padding:9px 2px}.skyline{width:55%}
+      .expense-form{grid-template-columns:1fr 1fr}.expense-form input:first-child{grid-column:1/-1}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="hero">
+    <div class="eyebrow">FOSHAN · GUANGDONG · 2026</div>
+    <h1>佛山之旅</h1>
+    <p class="hero-sub">08.10 — 08.15・六人同行・五晚同一間飯店</p>
+    <div class="countdown"><strong id="countdown">--</strong><span id="countdownLabel">距離出發</span></div>
+    <svg class="skyline" viewBox="0 0 300 160" aria-hidden="true">
+      <g fill="none" stroke="white" stroke-width="2">
+        <path d="M0 145h300M15 145V92h30v53M52 145V70h43v75M104 145V98h31v47M143 145V55h38v90M190 145V80h46v65M244 145V34h34v111"/>
+        <path d="M59 83h29M59 96h29M59 109h29M151 71h22M151 88h22M151 105h22M252 51h18M252 70h18M252 89h18"/>
+        <path d="M0 140c45-30 70-17 107-3 45 17 87 7 117-8 25-13 51-15 76-3" opacity=".7"/>
+      </g>
+    </svg>
+    <div class="hero-stats">
+      <div class="hero-stat"><b>6</b><small>天</small></div>
+      <div class="hero-stat"><b>5</b><small>晚</small></div>
+      <div class="hero-stat"><b>6</b><small>人</small></div>
+      <div class="hero-stat"><b>2</b><small>航班</small></div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <button class="pill primary" id="shareBtn">分享旅程</button>
+    <button class="pill" id="exportBtn">匯出備份</button>
+    <label class="pill" style="cursor:pointer">匯入資料<input id="importInput" type="file" accept=".json" hidden></label>
+  </div>
+
+  <main>
+    <section id="home" class="active">
+      <div class="section-head"><div><h2>旅程總覽</h2><p>航班與住宿集中管理</p></div></div>
+      <div class="card">
+        <div class="card-label">OUTBOUND · 08/10 星期一</div>
+        <div class="route">
+          <div class="airport"><div class="time">14:10</div><div class="code">TPE</div><div class="city">台北・桃園 T2</div></div>
+          <div class="plane-line"><span>✈</span></div>
+          <div class="airport"><div class="time">16:15</div><div class="code">CAN</div><div class="city">廣州・白雲 T2</div></div>
+        </div>
+        <div class="meta-row"><span class="tag">中華航空 CI 521</span><span class="tag">Airbus A330-300</span><span class="tag">飛行 2 小時 05 分</span></div>
+      </div>
+      <div class="card">
+        <div class="card-label">RETURN · 08/15 星期六</div>
+        <div class="route">
+          <div class="airport"><div class="time">17:30</div><div class="code">CAN</div><div class="city">廣州・白雲 T2</div></div>
+          <div class="plane-line"><span>✈</span></div>
+          <div class="airport"><div class="time">19:40</div><div class="code">TPE</div><div class="city">台北・桃園 T2</div></div>
+        </div>
+        <div class="meta-row"><span class="tag">中華航空 CI 522</span><span class="tag">Airbus A330-300</span><span class="tag">飛行 2 小時 10 分</span></div>
+      </div>
+
+      <div class="section-head"><div><h2>住宿</h2><p>連住五晚，不移動飯店</p></div></div>
+      <div class="card">
+        <div class="hotel-top">
+          <div>
+            <div class="card-label">HILTON GARDEN INN FOSHAN</div>
+            <div class="hotel-title">佛山希爾頓花園酒店</div>
+            <div class="hotel-address">佛山市南海區桂城街道桂瀾中路 20 號<br>入住 08/10・退房 08/15・6 人</div>
+          </div>
+          <div class="hotel-badge">⌂</div>
+        </div>
+        <div class="nearby">
+          <div><b>約 200 m</b>雷崗地鐵站</div>
+          <div><b>約 1 km</b>千燈湖</div>
+          <div><b>約 3 km</b>萬達廣場</div>
+          <div><b>約 40 km</b>白雲機場</div>
+        </div>
+        <div class="action-row">
+          <button class="btn" onclick="openMap('佛山希爾頓花園酒店')">開啟地圖</button>
+          <button class="btn secondary" onclick="switchTab('plan')">查看每日行程</button>
+        </div>
+      </div>
+      <p class="note">飯店周邊距離為官方資訊中的概略距離；實際步行與車程會依路線、交通及入口位置變動。</p>
+    </section>
+
+    <section id="plan">
+      <div class="section-head"><div><h2>每日行程</h2><p>預設每天約 10:30 出門，可自由修改</p></div></div>
+      <div class="day-tabs" id="dayTabs"></div>
+      <div class="card" id="dayContent"></div>
+    </section>
+
+    <section id="bookings">
+      <div class="section-head"><div><h2>訂單與提醒</h2><p>出發前快速確認</p></div></div>
+      <div class="grid-2">
+        <div class="mini-card"><b>CI 521</b><small>08/10 14:10<br>桃園 T2 → 白雲 T2</small></div>
+        <div class="mini-card"><b>CI 522</b><small>08/15 17:30<br>白雲 T2 → 桃園 T2</small></div>
+        <div class="mini-card"><b>5 晚</b><small>佛山希爾頓花園酒店<br>房型尚未填寫</small></div>
+        <div class="mini-card"><b>6 人</b><small>旅伴名單可在「同行」頁修改</small></div>
+      </div>
+      <div class="section-head"><div><h2>行前清單</h2><p>勾選內容會自動保存</p></div></div>
+      <div class="card" id="checklist"></div>
+      <button class="btn secondary" onclick="resetChecklist()">重設清單</button>
+    </section>
+
+    <section id="group">
+      <div class="section-head"><div><h2>同行旅伴</h2><p>共 6 人，點姓名即可修改</p></div></div>
+      <div class="card" id="travelers"></div>
+      <div class="section-head"><div><h2>住宿分配</h2><p>尚未確認房型</p></div></div>
+      <div class="card">
+        <label style="font-size:.72rem;color:var(--muted)">房間／床型備註
+          <textarea id="roomNote" class="field" rows="4" placeholder="例如：3 間雙床房；或記錄誰與誰同房。"></textarea>
+        </label>
+      </div>
+    </section>
+
+    <section id="money">
+      <div class="section-head"><div><h2>共同記帳</h2><p>資料只儲存在這台裝置</p></div></div>
+      <div class="summary-box">
+        <small>目前支出（折合人民幣）</small>
+        <div class="summary-total" id="totalCny">¥0.00</div>
+        <div class="summary-grid">
+          <div><small>平均每人</small><br><b id="perPerson">¥0.00</b></div>
+          <div><small>試算匯率</small><br><b>1 CNY = <input id="rate" value="4.74" inputmode="decimal" style="width:56px;border:0;border-bottom:1px solid rgba(255,255,255,.4);background:transparent;color:white;font-weight:800"> TWD</b></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="expense-form">
+          <input id="expenseName" class="field" placeholder="項目，例如：晚餐">
+          <input id="expenseAmount" class="field" type="number" inputmode="decimal" placeholder="金額">
+          <select id="expenseCurrency" class="field"><option value="CNY">CNY</option><option value="TWD">TWD</option></select>
+        </div>
+        <div class="action-row"><button class="btn" onclick="addExpense()">新增支出</button><button class="btn secondary" onclick="clearExpenses()">清空</button></div>
+      </div>
+      <div class="card" id="expenseList"></div>
+      <p class="note">匯率只用於離線試算，預設 4.74，可依實際換匯或刷卡匯率修改。</p>
+    </section>
+  </main>
+</div>
+
+<nav class="bottom-nav">
+  <button class="nav-btn active" data-tab="home"><span class="ico">⌂</span>首頁</button>
+  <button class="nav-btn" data-tab="plan"><span class="ico">◷</span>行程</button>
+  <button class="nav-btn" data-tab="bookings"><span class="ico">✓</span>訂單</button>
+  <button class="nav-btn" data-tab="group"><span class="ico">♙</span>同行</button>
+  <button class="nav-btn" data-tab="money"><span class="ico">¥</span>記帳</button>
+</nav>
+
+<div class="modal" id="eventModal">
+  <div class="modal-card">
+    <h3 id="modalTitle">新增行程</h3>
+    <div class="form-grid">
+      <label>時間<input id="eventTime" class="field" type="time"></label>
+      <label>行程名稱<input id="eventTitle" class="field" placeholder="例如：千燈湖散步"></label>
+      <label>備註<textarea id="eventNote" class="field" rows="3" placeholder="交通、集合地點或餐廳備註"></textarea></label>
+      <label>地圖搜尋關鍵字<input id="eventMap" class="field" placeholder="例如：佛山千燈湖"></label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn secondary" onclick="closeEventModal()">取消</button>
+      <button class="btn" onclick="saveEvent()">儲存</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const defaults = {
+  selectedDay: 0,
+  days: [
+    {date:'08/10',weekday:'星期一',title:'抵達佛山',events:[
+      {time:'14:10',title:'CI 521 台北飛廣州',note:'桃園機場第 2 航廈出發',map:''},
+      {time:'16:15',title:'抵達廣州白雲機場',note:'第 2 航廈；領取行李後前往佛山',map:'廣州白雲國際機場 T2'},
+      {time:'19:00',title:'入住佛山希爾頓花園酒店',note:'5 晚不換飯店',map:'佛山希爾頓花園酒店'},
+      {time:'20:00',title:'寰宇城或附近商場晚餐',note:'第一晚以飯店／住家附近輕鬆用餐為主',map:'佛山中海寰宇城'}
+    ]},
+    {date:'08/11',weekday:'星期二',title:'祖廟・嶺南天地',events:[
+      {time:'10:30',title:'從飯店出發',note:'依旅程偏好，早上不排太趕',map:'佛山希爾頓花園酒店'},
+      {time:'11:15',title:'佛山祖廟',note:'傳統建築與佛山文化景點',map:'佛山祖廟'},
+      {time:'14:30',title:'嶺南天地散步',note:'老街建築、咖啡店與餐飲，可一路逛到晚餐',map:'佛山嶺南天地'},
+      {time:'18:30',title:'晚餐',note:'餐廳可之後補上',map:'佛山嶺南天地'}
+    ]},
+    {date:'08/12',weekday:'星期三',title:'千燈湖・南海萬達',events:[
+      {time:'10:30',title:'從飯店出發',note:'千燈湖與飯店距離近，可安排悠閒散步',map:'佛山希爾頓花園酒店'},
+      {time:'11:00',title:'千燈湖公園',note:'白天散步、拍照',map:'佛山千燈湖公園'},
+      {time:'14:30',title:'南海萬達廣場',note:'逛街、下午茶與晚餐備選',map:'佛山南海萬達廣場'},
+      {time:'19:30',title:'千燈湖夜景',note:'晚上再回湖區散步看夜景',map:'佛山千燈湖'}
+    ]},
+    {date:'08/13',weekday:'星期四',title:'自由安排日',events:[
+      {time:'10:30',title:'從飯店出發',note:'保留給親友聚會或臨時調整',map:'佛山希爾頓花園酒店'}
+    ]},
+    {date:'08/14',weekday:'星期五',title:'彈性備用日',events:[
+      {time:'10:30',title:'從飯店出發',note:'可補前幾天沒走完的行程、購物或聚餐',map:'佛山希爾頓花園酒店'}
+    ]},
+    {date:'08/15',weekday:'星期六',title:'返台',events:[
+      {time:'10:30',title:'退房前整理行李',note:'確認證件、行李與伴手禮',map:''},
+      {time:'12:00',title:'飯店退房',note:'退房時間請以訂房確認單為準',map:'佛山希爾頓花園酒店'},
+      {time:'14:00',title:'前往白雲機場',note:'預留跨城交通與辦理登機時間',map:'廣州白雲國際機場 T2'},
+      {time:'17:30',title:'CI 522 廣州飛台北',note:'白雲機場第 2 航廈出發',map:'廣州白雲國際機場 T2'},
+      {time:'19:40',title:'抵達台北',note:'桃園機場第 2 航廈',map:'桃園國際機場 T2'}
+    ]}
+  ],
+  travelers:['旅伴 1','旅伴 2','旅伴 3','旅伴 4','旅伴 5','旅伴 6'],
+  roomNote:'',
+  checklist:[
+    {text:'旅行證件（護照／台胞證）',done:false},
+    {text:'機票與訂房確認資料',done:false},
+    {text:'手機漫遊、網卡或 eSIM',done:false},
+    {text:'支付工具與少量人民幣現金',done:false},
+    {text:'常用藥品與個人用品',done:false},
+    {text:'充電器、行動電源與轉接需求',done:false},
+    {text:'確認每人行李額度',done:false},
+    {text:'出發前查看廣州、佛山天氣',done:false}
+  ],
+  expenses:[],
+  rate:4.74
+};
+let state = loadState();
+let editingEvent = null;
+
+function loadState(){
+  try{
+    const saved=JSON.parse(localStorage.getItem('foshanTrip2026'));
+    return saved ? {...defaults,...saved} : structuredClone(defaults);
+  }catch(e){return JSON.parse(JSON.stringify(defaults));}
+}
+function saveState(){localStorage.setItem('foshanTrip2026',JSON.stringify(state));}
+function toast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1800);
+}
+function switchTab(id){
+  document.querySelectorAll('main section').forEach(s=>s.classList.toggle('active',s.id===id));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('.nav-btn').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+
+function renderDays(){
+  const tabs=document.getElementById('dayTabs');
+  tabs.innerHTML=state.days.map((d,i)=>`<button class="day-tab ${i===state.selectedDay?'active':''}" onclick="selectDay(${i})">${d.weekday.replace('星期','週')}<strong>${d.date}</strong></button>`).join('');
+  const d=state.days[state.selectedDay];
+  const events=d.events.sort((a,b)=>a.time.localeCompare(b.time));
+  document.getElementById('dayContent').innerHTML=`
+    <div class="day-title"><div><div class="card-label">DAY ${state.selectedDay+1}</div><h3>${d.title}</h3></div><button class="btn" onclick="openEventModal()">＋ 新增</button></div>
+    <div class="timeline">${events.length?events.map((e,i)=>`
+      <div class="event">
+        <div class="event-time">${e.time||'--:--'}</div><div class="dot"></div>
+        <div class="event-body"><strong>${escapeHtml(e.title)}</strong>${e.note?`<small>${escapeHtml(e.note)}</small>`:''}
+          <div class="event-tools">${e.map?`<button class="link-btn" onclick="openMap('${escapeAttr(e.map)}')">地圖</button>`:''}<button class="link-btn" onclick="openEventModal(${i})">編輯</button><button class="link-btn" onclick="deleteEvent(${i})">刪除</button></div>
+        </div>
+      </div>`).join(''):`<div class="empty">這一天還沒有行程，按「新增」開始安排。</div>`}
+    </div>`;
+}
+function selectDay(i){state.selectedDay=i;saveState();renderDays()}
+function openEventModal(i=null){
+  editingEvent=i;
+  const e=i===null?{time:'10:30',title:'',note:'',map:''}:state.days[state.selectedDay].events[i];
+  document.getElementById('modalTitle').textContent=i===null?'新增行程':'編輯行程';
+  eventTime.value=e.time||'';eventTitle.value=e.title||'';eventNote.value=e.note||'';eventMap.value=e.map||'';
+  document.getElementById('eventModal').classList.add('open');
+}
+function closeEventModal(){document.getElementById('eventModal').classList.remove('open')}
+function saveEvent(){
+  const item={time:eventTime.value,title:eventTitle.value.trim(),note:eventNote.value.trim(),map:eventMap.value.trim()};
+  if(!item.title){toast('請輸入行程名稱');return}
+  const list=state.days[state.selectedDay].events;
+  editingEvent===null?list.push(item):list[editingEvent]=item;
+  saveState();closeEventModal();renderDays();toast('行程已儲存');
+}
+function deleteEvent(i){
+  if(confirm('確定刪除這個行程？')){state.days[state.selectedDay].events.splice(i,1);saveState();renderDays()}
+}
+document.getElementById('eventModal').addEventListener('click',e=>{if(e.target.id==='eventModal')closeEventModal()});
+
+function renderTravelers(){
+  document.getElementById('travelers').innerHTML=state.travelers.map((n,i)=>`
+  <div class="traveler"><div class="avatar">${i+1}</div><div style="flex:1"><input value="${escapeAttr(n)}" onchange="updateTraveler(${i},this.value)"><small>同行旅伴 ${i+1}</small></div></div>`).join('');
+  roomNote.value=state.roomNote||'';
+}
+function updateTraveler(i,v){state.travelers[i]=v.trim()||`旅伴 ${i+1}`;saveState();toast('姓名已更新')}
+roomNote.addEventListener('input',e=>{state.roomNote=e.target.value;saveState()});
+
+function renderChecklist(){
+  checklist.innerHTML=state.checklist.map((x,i)=>`
+  <label class="check-item ${x.done?'done':''}"><input type="checkbox" ${x.done?'checked':''} onchange="toggleCheck(${i},this.checked)"><span>${escapeHtml(x.text)}</span></label>`).join('');
+}
+function toggleCheck(i,v){state.checklist[i].done=v;saveState();renderChecklist()}
+function resetChecklist(){state.checklist=JSON.parse(JSON.stringify(defaults.checklist));saveState();renderChecklist();toast('清單已重設')}
+
+function renderExpenses(){
+  const rate=parseFloat(state.rate)||4.74;
+  let total=0;
+  state.expenses.forEach(x=>total+=x.currency==='CNY'?x.amount:x.amount/rate);
+  totalCny.textContent=`¥${total.toFixed(2)}`;
+  perPerson.textContent=`¥${(total/6).toFixed(2)}`;
+  expenseList.innerHTML=state.expenses.length?state.expenses.map((x,i)=>`
+    <div class="expense"><div><strong>${escapeHtml(x.name)}</strong><small>${x.currency==='CNY'?'人民幣':'新台幣'}</small></div>
+    <div class="amount">${x.currency==='CNY'?'¥':'NT$'}${x.amount.toFixed(2)}<br><button class="link-btn" onclick="deleteExpense(${i})">刪除</button></div></div>`).join(''):'<div class="empty">還沒有支出紀錄。</div>';
+}
+function addExpense(){
+  const name=expenseName.value.trim();const amount=parseFloat(expenseAmount.value);
+  if(!name||!amount||amount<=0){toast('請輸入項目與正確金額');return}
+  state.expenses.push({name,amount,currency:expenseCurrency.value});
+  saveState();expenseName.value='';expenseAmount.value='';renderExpenses();toast('支出已新增');
+}
+function deleteExpense(i){state.expenses.splice(i,1);saveState();renderExpenses()}
+function clearExpenses(){if(confirm('確定清空所有支出？')){state.expenses=[];saveState();renderExpenses()}}
+rate.addEventListener('change',e=>{state.rate=parseFloat(e.target.value)||4.74;saveState();renderExpenses()});
+
+function openMap(keyword){
+  const url='https://uri.amap.com/search?keyword='+encodeURIComponent(keyword)+'&city=佛山&src=foshantrip';
+  window.open(url,'_blank','noopener');
+}
+function escapeHtml(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function escapeAttr(s=''){return escapeHtml(s).replace(/`/g,'&#96;')}
+
+function updateCountdown(){
+  const now=new Date();const target=new Date('2026-08-10T14:10:00+08:00');
+  const diff=target-now;
+  if(diff>0){countdown.textContent=Math.ceil(diff/86400000);countdownLabel.textContent='天後出發'}
+  else{
+    const end=new Date('2026-08-15T19:40:00+08:00');
+    if(now<=end){countdown.textContent='旅途中';countdownLabel.textContent='祝旅途愉快'}
+    else{countdown.textContent='已完成';countdownLabel.textContent='珍藏這趟回憶'}
+  }
+}
+shareBtn.onclick=async()=>{
+  const text='2026 佛山之旅｜8/10–8/15｜CI521 / CI522｜佛山希爾頓花園酒店｜6 人同行';
+  try{
+    if(navigator.share)await navigator.share({title:'佛山之旅 2026',text});
+    else{await navigator.clipboard.writeText(text);toast('旅程摘要已複製')}
+  }catch(e){}
+}
+exportBtn.onclick=()=>{
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='佛山之旅_備份.json';a.click();URL.revokeObjectURL(a.href);
+}
+importInput.onchange=async e=>{
+  const file=e.target.files[0];if(!file)return;
+  try{const data=JSON.parse(await file.text());state={...defaults,...data};saveState();init();toast('資料已匯入')}
+  catch(err){toast('匯入失敗：檔案格式不正確')}
+}
+function init(){
+  updateCountdown();renderDays();renderTravelers();renderChecklist();
+  rate.value=state.rate||4.74;roomNote.value=state.roomNote||'';renderExpenses();
+}
+if('serviceWorker' in navigator && location.protocol!=='file:')navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+init();
+</script>
+</body>
+</html>
