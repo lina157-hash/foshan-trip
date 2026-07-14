@@ -174,7 +174,7 @@
   <header class="hero">
     <div class="eyebrow">FOSHAN · GUANGDONG · 2026</div>
     <h1>佛山之旅</h1>
-    <p class="hero-sub">08.10 — 08.15・六人同行・五晚同一間飯店</p>
+    <p class="hero-sub">08.10 — 08.15・七人同行・五晚同一間飯店</p>
     <div class="countdown"><strong id="countdown">--</strong><span id="countdownLabel">距離出發</span></div>
     <svg class="skyline" viewBox="0 0 300 160" aria-hidden="true">
       <g fill="none" stroke="white" stroke-width="2">
@@ -186,7 +186,7 @@
     <div class="hero-stats">
       <div class="hero-stat"><b>6</b><small>天</small></div>
       <div class="hero-stat"><b>5</b><small>晚</small></div>
-      <div class="hero-stat"><b>6</b><small>人</small></div>
+      <div class="hero-stat"><b>7</b><small>人</small></div>
       <div class="hero-stat"><b>2</b><small>航班</small></div>
     </div>
   </header>
@@ -229,7 +229,7 @@
           <div>
             <div class="card-label">HILTON GARDEN INN FOSHAN</div>
             <div class="hotel-title">佛山希爾頓花園酒店</div>
-            <div class="hotel-address">佛山市南海區桂城街道桂瀾中路 20 號<br>入住 08/10・退房 08/15・6 人</div>
+            <div class="hotel-address">佛山市南海區桂城街道桂瀾中路 20 號<br>入住 08/10・退房 08/15・7 人</div>
           </div>
           <div class="hotel-badge">⌂</div>
         </div>
@@ -259,7 +259,7 @@
         <div class="mini-card"><b>CI 521</b><small>08/10 14:10<br>桃園 T2 → 白雲 T2</small></div>
         <div class="mini-card"><b>CI 522</b><small>08/15 17:30<br>白雲 T2 → 桃園 T2</small></div>
         <div class="mini-card"><b>5 晚</b><small>佛山希爾頓花園酒店<br>房型尚未填寫</small></div>
-        <div class="mini-card"><b>6 人</b><small>旅伴名單可在「同行」頁修改</small></div>
+        <div class="mini-card"><b>7 人</b><small>旅伴名單可在「同行」頁修改</small></div>
       </div>
       <div class="section-head"><div><h2>行前清單</h2><p>勾選內容會同步至雲端</p></div></div>
       <div class="card" id="checklist"></div>
@@ -267,7 +267,7 @@
     </section>
 
     <section id="group">
-      <div class="section-head"><div><h2>同行旅伴</h2><p>共 6 人；管理員登入後可修改</p></div></div>
+      <div class="section-head"><div><h2>同行旅伴</h2><p>共 7 人；管理員登入後可修改</p></div></div>
       <div class="card" id="travelers"></div>
       <div class="section-head"><div><h2>住宿分配</h2><p>尚未確認房型</p></div></div>
       <div class="card">
@@ -401,7 +401,7 @@ const defaults = {
       {time:'19:40',title:'抵達台北',note:'桃園機場第 2 航廈',map:'桃園國際機場 T2'}
     ]}
   ],
-  travelers:['旅伴 1','旅伴 2','旅伴 3','旅伴 4','旅伴 5','旅伴 6'],
+  travelers:['旅伴 1','旅伴 2','旅伴 3','旅伴 4','旅伴 5','旅伴 6','旅伴 7'],
   roomNote:'',
   checklist:[
     {text:'旅行證件（護照／台胞證）',done:false},
@@ -426,10 +426,15 @@ let applyingRemote = false;
 let lastUpdatedAt = null;
 
 function deepClone(value){return JSON.parse(JSON.stringify(value));}
+function ensureTravelerCount(value, minimum=7){
+  if(!Array.isArray(value.travelers))value.travelers=[];
+  while(value.travelers.length<minimum)value.travelers.push(`旅伴 ${value.travelers.length+1}`);
+  return value;
+}
 function loadLocalState(){
   try{
     const saved = JSON.parse(localStorage.getItem('foshanTrip2026'));
-    return saved ? {...deepClone(defaults), ...saved} : deepClone(defaults);
+    return ensureTravelerCount(saved ? {...deepClone(defaults), ...saved} : deepClone(defaults));
   }catch(e){return deepClone(defaults);}
 }
 function localSave(){localStorage.setItem('foshanTrip2026', JSON.stringify(state));}
@@ -570,7 +575,7 @@ function renderExpenses(){
   const rate=parseFloat(state.rate)||4.74;let total=0;
   state.expenses.forEach(x=>total+=x.currency==='CNY'?Number(x.amount):Number(x.amount)/rate);
   document.getElementById('totalCny').textContent=`¥${total.toFixed(2)}`;
-  document.getElementById('perPerson').textContent=`¥${(total/6).toFixed(2)}`;
+  document.getElementById('perPerson').textContent=`¥${(total/Math.max(state.travelers.length,1)).toFixed(2)}`;
   document.getElementById('expenseList').innerHTML=state.expenses.length?state.expenses.map((x,i)=>`
     <div class="expense"><div><strong>${escapeHtml(x.name)}</strong><small>${x.currency==='CNY'?'人民幣':'新台幣'}</small></div>
     <div class="amount">${x.currency==='CNY'?'¥':'NT$'}${Number(x.amount).toFixed(2)}${isAdmin()?`<br><button class="link-btn" onclick="deleteExpense(${i})">刪除</button>`:''}</div></div>`).join(''):'<div class="empty">還沒有支出紀錄。</div>';
@@ -608,7 +613,7 @@ function updateCountdown(){
 }
 
 document.getElementById('shareBtn').onclick=async()=>{
-  const text='2026 佛山之旅｜8/10–8/15｜CI521 / CI522｜佛山希爾頓花園酒店｜6 人同行';
+  const text=`2026 佛山之旅｜8/10–8/15｜CI521 / CI522｜佛山希爾頓花園酒店｜${state.travelers.length} 人同行`;
   try{
     if(navigator.share)await navigator.share({title:'佛山之旅 2026',text,url:location.href});
     else{await navigator.clipboard.writeText(location.href);toast('網址已複製');}
@@ -623,7 +628,7 @@ document.getElementById('importInput').onchange=async e=>{
   const file=e.target.files[0];if(!file)return;
   try{
     const data=JSON.parse(await file.text());
-    state={...deepClone(defaults),...data,selectedDay:state.selectedDay||0};renderAll();scheduleCloudSave();toast('資料已匯入並同步');
+    state=ensureTravelerCount({...deepClone(defaults),...data,selectedDay:state.selectedDay||0});renderAll();scheduleCloudSave();toast('資料已匯入並同步');
   }catch(err){toast('匯入失敗：檔案格式不正確');}
   e.target.value='';
 };
@@ -661,7 +666,7 @@ document.getElementById('loginPassword').addEventListener('keydown',e=>{if(e.key
 
 onAuthStateChanged(auth,user=>{
   applyAdminUI();renderAll();
-  if(user)setCloudStatus(cloudConnected?'online':'','管理員已登入');
+  if(user){setCloudStatus(cloudConnected?'online':'','管理員已登入');scheduleCloudSave();}
 });
 
 onSnapshot(tripRef,snap=>{
@@ -669,7 +674,7 @@ onSnapshot(tripRef,snap=>{
   if(snap.exists()){
     const data=snap.data();const currentDay=state.selectedDay||0;
     applyingRemote=true;
-    state={...deepClone(defaults),...(data.state||{}),selectedDay:Math.min(currentDay,(data.state?.days?.length||defaults.days.length)-1)};
+    state=ensureTravelerCount({...deepClone(defaults),...(data.state||{}),selectedDay:Math.min(currentDay,(data.state?.days?.length||defaults.days.length)-1)});
     lastUpdatedAt=data.updatedAt||null;localSave();renderAll();applyingRemote=false;
     setCloudStatus('online',isAdmin()?'已同步雲端':'顯示最新行程');
     document.getElementById('syncMeta').textContent=lastUpdatedAt?`雲端最後更新：${formatTimestamp(lastUpdatedAt)}`:'';

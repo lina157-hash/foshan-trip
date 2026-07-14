@@ -18,3 +18,6 @@
 - firebaseConfig 可放在前端；寫入權限由 Authentication 與 Firestore Rules 控制。
 - 不要把管理員密碼上傳 GitHub 或傳給他人。
 - Firestore 規則必須只允許指定 UID 寫入。
+
+
+本版已將同行人數改為 7 人，並會在管理員登入後把既有 6 人雲端資料自動補上「旅伴 7」。共同記帳的平均每人金額會依旅伴名單人數自動計算。
