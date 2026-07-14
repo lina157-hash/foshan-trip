@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#12372A" />
-  <meta name="description" content="2026 佛山之旅：航班、住宿、行程、旅伴與共同記帳。" />
+  <meta name="description" content="2026 佛山之旅：雲端同步航班、住宿、行程、旅伴與共同記帳。" />
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" href="icon-192.png" />
-  <title>佛山之旅 2026</title>
+  <title>佛山之旅 2026｜雲端同步版</title>
   <style>
     :root{
       --ink:#173329; --muted:#6f7f78; --green:#12372A; --green2:#2f6a54;
@@ -144,6 +144,24 @@
     .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
     .toast{position:fixed;left:50%;bottom:92px;transform:translate(-50%,20px);background:#183c2f;color:white;padding:10px 14px;border-radius:999px;font-size:.75rem;opacity:0;pointer-events:none;transition:.25s;z-index:120}
     .toast.show{opacity:1;transform:translate(-50%,0)}
+
+    .cloud-bar{display:flex;gap:8px;padding:14px 16px 0;align-items:center;flex-wrap:wrap}
+    .cloud-status{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:rgba(255,253,248,.9);padding:9px 12px;border-radius:999px;font-size:.74rem;font-weight:800;color:var(--muted)}
+    .cloud-dot{width:8px;height:8px;border-radius:50%;background:#9aa49f;box-shadow:0 0 0 3px rgba(154,164,159,.12)}
+    .cloud-status.online .cloud-dot{background:#27865f;box-shadow:0 0 0 3px rgba(39,134,95,.13)}
+    .cloud-status.saving .cloud-dot{background:#c9954b;box-shadow:0 0 0 3px rgba(201,149,75,.15)}
+    .cloud-status.error .cloud-dot{background:#b44f4f;box-shadow:0 0 0 3px rgba(180,79,79,.14)}
+    .admin-badge{font-size:.67rem;padding:5px 8px;border-radius:999px;background:#e6f1eb;color:#286449;font-weight:900;display:none}
+    body.admin-mode .admin-badge{display:inline-block}
+    .viewer-note{display:flex;gap:9px;align-items:flex-start;background:#eef4f0;border:1px solid #dce9e1;color:#49645a;border-radius:15px;padding:11px 13px;margin:12px 0;font-size:.73rem;line-height:1.55}
+    body.admin-mode .viewer-note{display:none}
+    .admin-only{display:none!important}
+    body.admin-mode .admin-only{display:initial!important}
+    body.admin-mode .action-row.admin-only{display:flex!important}
+    body.admin-mode .expense-form.admin-only{display:grid!important}
+    .field[readonly], input[readonly], textarea[readonly]{background:#f5f2ec;color:#6d7772;cursor:default}
+    .login-help{font-size:.72rem;line-height:1.6;color:var(--muted);background:#f4efe6;border-radius:13px;padding:10px 12px}
+    .sync-meta{font-size:.68rem;color:var(--muted);margin:7px 2px 0}
     @media(max-width:420px){
       .hero{margin:0;border-radius:0 0 28px 28px}
       .hero-stats{gap:5px}.hero-stat{padding:9px 2px}.skyline{width:55%}
@@ -173,13 +191,17 @@
     </div>
   </header>
 
-  <div class="toolbar">
+  <div class="cloud-bar">
+    <div class="cloud-status" id="cloudStatus"><span class="cloud-dot"></span><span id="cloudStatusText">正在連接雲端…</span></div>
+    <span class="admin-badge">管理員模式</span>
     <button class="pill primary" id="shareBtn">分享旅程</button>
-    <button class="pill" id="exportBtn">匯出備份</button>
-    <label class="pill" style="cursor:pointer">匯入資料<input id="importInput" type="file" accept=".json" hidden></label>
+    <button class="pill" id="authBtn">管理員登入</button>
+    <button class="pill admin-only" id="exportBtn">匯出備份</button>
+    <label class="pill admin-only" style="cursor:pointer">匯入並同步<input id="importInput" type="file" accept=".json" hidden></label>
   </div>
 
   <main>
+    <div class="viewer-note">☁️ <span>目前是唯讀瀏覽模式。管理員更新後，這個頁面會自動顯示最新內容；只有管理員登入後才能修改。</span></div>
     <section id="home" class="active">
       <div class="section-head"><div><h2>旅程總覽</h2><p>航班與住宿集中管理</p></div></div>
       <div class="card">
@@ -226,7 +248,7 @@
     </section>
 
     <section id="plan">
-      <div class="section-head"><div><h2>每日行程</h2><p>預設每天約 10:30 出門，可自由修改</p></div></div>
+      <div class="section-head"><div><h2>每日行程</h2><p>管理員修改後會即時同步給所有裝置</p></div></div>
       <div class="day-tabs" id="dayTabs"></div>
       <div class="card" id="dayContent"></div>
     </section>
@@ -239,13 +261,13 @@
         <div class="mini-card"><b>5 晚</b><small>佛山希爾頓花園酒店<br>房型尚未填寫</small></div>
         <div class="mini-card"><b>6 人</b><small>旅伴名單可在「同行」頁修改</small></div>
       </div>
-      <div class="section-head"><div><h2>行前清單</h2><p>勾選內容會自動保存</p></div></div>
+      <div class="section-head"><div><h2>行前清單</h2><p>勾選內容會同步至雲端</p></div></div>
       <div class="card" id="checklist"></div>
-      <button class="btn secondary" onclick="resetChecklist()">重設清單</button>
+      <button id="resetChecklistBtn" class="btn secondary admin-only" onclick="resetChecklist()">重設清單</button>
     </section>
 
     <section id="group">
-      <div class="section-head"><div><h2>同行旅伴</h2><p>共 6 人，點姓名即可修改</p></div></div>
+      <div class="section-head"><div><h2>同行旅伴</h2><p>共 6 人；管理員登入後可修改</p></div></div>
       <div class="card" id="travelers"></div>
       <div class="section-head"><div><h2>住宿分配</h2><p>尚未確認房型</p></div></div>
       <div class="card">
@@ -256,7 +278,7 @@
     </section>
 
     <section id="money">
-      <div class="section-head"><div><h2>共同記帳</h2><p>資料只儲存在這台裝置</p></div></div>
+      <div class="section-head"><div><h2>共同記帳</h2><p>資料由 Firebase 即時同步</p></div></div>
       <div class="summary-box">
         <small>目前支出（折合人民幣）</small>
         <div class="summary-total" id="totalCny">¥0.00</div>
@@ -265,8 +287,8 @@
           <div><small>試算匯率</small><br><b>1 CNY = <input id="rate" value="4.74" inputmode="decimal" style="width:56px;border:0;border-bottom:1px solid rgba(255,255,255,.4);background:transparent;color:white;font-weight:800"> TWD</b></div>
         </div>
       </div>
-      <div class="card">
-        <div class="expense-form">
+      <div class="card admin-only">
+        <div class="expense-form admin-only">
           <input id="expenseName" class="field" placeholder="項目，例如：晚餐">
           <input id="expenseAmount" class="field" type="number" inputmode="decimal" placeholder="金額">
           <select id="expenseCurrency" class="field"><option value="CNY">CNY</option><option value="TWD">TWD</option></select>
@@ -274,7 +296,7 @@
         <div class="action-row"><button class="btn" onclick="addExpense()">新增支出</button><button class="btn secondary" onclick="clearExpenses()">清空</button></div>
       </div>
       <div class="card" id="expenseList"></div>
-      <p class="note">匯率只用於離線試算，預設 4.74，可依實際換匯或刷卡匯率修改。</p>
+      <p class="note">匯率只用於試算，預設 4.74；管理員可依實際換匯或刷卡匯率修改。</p><p class="sync-meta" id="syncMeta"></p>
     </section>
   </main>
 </div>
@@ -302,9 +324,48 @@
     </div>
   </div>
 </div>
+
+<div class="modal" id="loginModal">
+  <div class="modal-card">
+    <h3>管理員登入</h3>
+    <div class="form-grid">
+      <label>Firebase 管理員 Email<input id="loginEmail" class="field" type="email" autocomplete="username" placeholder="請輸入管理員 Email"></label>
+      <label>密碼<input id="loginPassword" class="field" type="password" autocomplete="current-password" placeholder="請輸入密碼"></label>
+      <div class="login-help">登入資料會直接交由 Firebase Authentication 驗證，密碼不會寫進 GitHub 程式碼。登入後的修改會儲存到 <b>trips/foshan2026</b>。</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn secondary" onclick="closeLoginModal()">取消</button>
+      <button class="btn" id="loginSubmitBtn" onclick="adminLogin()">登入</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
-<script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js';
+import {
+  getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
+  setPersistence, browserLocalPersistence
+} from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js';
+import {
+  getFirestore, doc, getDoc, onSnapshot, setDoc, serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCLA_yJqZ8Nxs8Ybw1_bGWYbPmK_gpTjtg",
+  authDomain: "foshan-trip-2026.firebaseapp.com",
+  projectId: "foshan-trip-2026",
+  storageBucket: "foshan-trip-2026.firebasestorage.app",
+  messagingSenderId: "498637925105",
+  appId: "1:498637925105:web:401a8c786d262b0d315750"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const tripRef = doc(db, 'trips', 'foshan2026');
+setPersistence(auth, browserLocalPersistence).catch(console.warn);
+
 const defaults = {
   selectedDay: 0,
   days: [
@@ -355,19 +416,75 @@ const defaults = {
   expenses:[],
   rate:4.74
 };
-let state = loadState();
-let editingEvent = null;
 
-function loadState(){
+let state = loadLocalState();
+let editingEvent = null;
+let cloudExists = false;
+let cloudConnected = false;
+let saveTimer = null;
+let applyingRemote = false;
+let lastUpdatedAt = null;
+
+function deepClone(value){return JSON.parse(JSON.stringify(value));}
+function loadLocalState(){
   try{
-    const saved=JSON.parse(localStorage.getItem('foshanTrip2026'));
-    return saved ? {...defaults,...saved} : structuredClone(defaults);
-  }catch(e){return JSON.parse(JSON.stringify(defaults));}
+    const saved = JSON.parse(localStorage.getItem('foshanTrip2026'));
+    return saved ? {...deepClone(defaults), ...saved} : deepClone(defaults);
+  }catch(e){return deepClone(defaults);}
 }
-function saveState(){localStorage.setItem('foshanTrip2026',JSON.stringify(state));}
+function localSave(){localStorage.setItem('foshanTrip2026', JSON.stringify(state));}
+function isAdmin(){return !!auth.currentUser;}
+function requireAdmin(){if(!isAdmin()){toast('請先使用管理員帳號登入');return false;} return true;}
+function cloudState(){const payload=deepClone(state);delete payload.selectedDay;return payload;}
+function setCloudStatus(mode,text){
+  const el=document.getElementById('cloudStatus');
+  el.className='cloud-status'+(mode?' '+mode:'');
+  document.getElementById('cloudStatusText').textContent=text;
+}
+function formatTimestamp(ts){
+  try{return ts?.toDate().toLocaleString('zh-TW',{hour12:false})||'';}catch(e){return '';}
+}
 function toast(msg){
   const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),1800);
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+function scheduleCloudSave(){
+  localSave();
+  if(applyingRemote || !isAdmin()) return;
+  clearTimeout(saveTimer);
+  setCloudStatus('saving','正在儲存…');
+  saveTimer=setTimeout(async()=>{
+    try{
+      await setDoc(tripRef,{state:cloudState(),updatedAt:serverTimestamp(),updatedBy:auth.currentUser.email||auth.currentUser.uid},{merge:true});
+      cloudExists=true;
+      setCloudStatus('online','已同步雲端');
+    }catch(err){
+      console.error(err);setCloudStatus('error','同步失敗');toast(friendlyError(err));
+    }
+  },450);
+}
+function friendlyError(err){
+  const code=err?.code||'';
+  if(code.includes('permission-denied'))return '沒有寫入權限，請檢查 Firestore 規則中的 UID';
+  if(code.includes('invalid-credential')||code.includes('wrong-password'))return 'Email 或密碼不正確';
+  if(code.includes('too-many-requests'))return '嘗試次數太多，請稍後再試';
+  if(code.includes('network-request-failed')||code.includes('unavailable'))return '網路連線異常，請稍後再試';
+  return '操作失敗：'+(err?.message||'未知錯誤');
+}
+function renderAll(){
+  renderDays();renderTravelers();renderChecklist();
+  document.getElementById('rate').value=state.rate||4.74;
+  document.getElementById('roomNote').value=state.roomNote||'';
+  renderExpenses();applyAdminUI();
+}
+function applyAdminUI(){
+  const admin=isAdmin();
+  document.body.classList.toggle('admin-mode',admin);
+  document.getElementById('authBtn').textContent=admin?'登出管理員':'管理員登入';
+  document.getElementById('roomNote').readOnly=!admin;
+  document.getElementById('rate').readOnly=!admin;
+  document.querySelectorAll('#checklist input').forEach(x=>x.disabled=!admin);
+  document.querySelectorAll('#travelers input').forEach(x=>x.readOnly=!admin);
 }
 function switchTab(id){
   document.querySelectorAll('main section').forEach(s=>s.classList.toggle('active',s.id===id));
@@ -379,114 +496,203 @@ document.querySelectorAll('.nav-btn').forEach(b=>b.onclick=()=>switchTab(b.datas
 function renderDays(){
   const tabs=document.getElementById('dayTabs');
   tabs.innerHTML=state.days.map((d,i)=>`<button class="day-tab ${i===state.selectedDay?'active':''}" onclick="selectDay(${i})">${d.weekday.replace('星期','週')}<strong>${d.date}</strong></button>`).join('');
-  const d=state.days[state.selectedDay];
-  const events=d.events.sort((a,b)=>a.time.localeCompare(b.time));
+  const d=state.days[state.selectedDay]||state.days[0];
+  const events=[...(d.events||[])].sort((a,b)=>(a.time||'').localeCompare(b.time||''));
   document.getElementById('dayContent').innerHTML=`
-    <div class="day-title"><div><div class="card-label">DAY ${state.selectedDay+1}</div><h3>${d.title}</h3></div><button class="btn" onclick="openEventModal()">＋ 新增</button></div>
+    <div class="day-title"><div><div class="card-label">DAY ${state.selectedDay+1}</div><h3>${escapeHtml(d.title)}</h3></div>${isAdmin()?'<button class="btn" onclick="openEventModal()">＋ 新增</button>':''}</div>
     <div class="timeline">${events.length?events.map((e,i)=>`
       <div class="event">
         <div class="event-time">${e.time||'--:--'}</div><div class="dot"></div>
         <div class="event-body"><strong>${escapeHtml(e.title)}</strong>${e.note?`<small>${escapeHtml(e.note)}</small>`:''}
-          <div class="event-tools">${e.map?`<button class="link-btn" onclick="openMap('${escapeAttr(e.map)}')">地圖</button>`:''}<button class="link-btn" onclick="openEventModal(${i})">編輯</button><button class="link-btn" onclick="deleteEvent(${i})">刪除</button></div>
+          <div class="event-tools">${e.map?`<button class="link-btn" onclick="openMap('${escapeAttr(e.map)}')">地圖</button>`:''}${isAdmin()?`<button class="link-btn" onclick="openEventModal(${i})">編輯</button><button class="link-btn" onclick="deleteEvent(${i})">刪除</button>`:''}</div>
         </div>
-      </div>`).join(''):`<div class="empty">這一天還沒有行程，按「新增」開始安排。</div>`}
+      </div>`).join(''):`<div class="empty">這一天還沒有行程。</div>`}
     </div>`;
 }
-function selectDay(i){state.selectedDay=i;saveState();renderDays()}
+function selectDay(i){state.selectedDay=i;localSave();renderDays();}
 function openEventModal(i=null){
+  if(!requireAdmin())return;
   editingEvent=i;
-  const e=i===null?{time:'10:30',title:'',note:'',map:''}:state.days[state.selectedDay].events[i];
+  const sorted=[...(state.days[state.selectedDay].events||[])].sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const e=i===null?{time:'10:30',title:'',note:'',map:''}:sorted[i];
+  editingEvent=i===null?null:state.days[state.selectedDay].events.indexOf(e);
   document.getElementById('modalTitle').textContent=i===null?'新增行程':'編輯行程';
-  eventTime.value=e.time||'';eventTitle.value=e.title||'';eventNote.value=e.note||'';eventMap.value=e.map||'';
+  document.getElementById('eventTime').value=e.time||'';
+  document.getElementById('eventTitle').value=e.title||'';
+  document.getElementById('eventNote').value=e.note||'';
+  document.getElementById('eventMap').value=e.map||'';
   document.getElementById('eventModal').classList.add('open');
 }
-function closeEventModal(){document.getElementById('eventModal').classList.remove('open')}
+function closeEventModal(){document.getElementById('eventModal').classList.remove('open');}
 function saveEvent(){
-  const item={time:eventTime.value,title:eventTitle.value.trim(),note:eventNote.value.trim(),map:eventMap.value.trim()};
-  if(!item.title){toast('請輸入行程名稱');return}
+  if(!requireAdmin())return;
+  const item={
+    time:document.getElementById('eventTime').value,
+    title:document.getElementById('eventTitle').value.trim(),
+    note:document.getElementById('eventNote').value.trim(),
+    map:document.getElementById('eventMap').value.trim()
+  };
+  if(!item.title){toast('請輸入行程名稱');return;}
   const list=state.days[state.selectedDay].events;
   editingEvent===null?list.push(item):list[editingEvent]=item;
-  saveState();closeEventModal();renderDays();toast('行程已儲存');
+  closeEventModal();renderDays();scheduleCloudSave();toast('行程已儲存並同步');
 }
 function deleteEvent(i){
-  if(confirm('確定刪除這個行程？')){state.days[state.selectedDay].events.splice(i,1);saveState();renderDays()}
+  if(!requireAdmin())return;
+  const list=state.days[state.selectedDay].events;
+  const sorted=[...list].sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const target=sorted[i];const originalIndex=list.indexOf(target);
+  if(confirm('確定刪除這個行程？')){list.splice(originalIndex,1);renderDays();scheduleCloudSave();}
 }
-document.getElementById('eventModal').addEventListener('click',e=>{if(e.target.id==='eventModal')closeEventModal()});
+document.getElementById('eventModal').addEventListener('click',e=>{if(e.target.id==='eventModal')closeEventModal();});
 
 function renderTravelers(){
   document.getElementById('travelers').innerHTML=state.travelers.map((n,i)=>`
-  <div class="traveler"><div class="avatar">${i+1}</div><div style="flex:1"><input value="${escapeAttr(n)}" onchange="updateTraveler(${i},this.value)"><small>同行旅伴 ${i+1}</small></div></div>`).join('');
-  roomNote.value=state.roomNote||'';
+  <div class="traveler"><div class="avatar">${i+1}</div><div style="flex:1"><input value="${escapeAttr(n)}" ${isAdmin()?'':'readonly'} onchange="updateTraveler(${i},this.value)"><small>同行旅伴 ${i+1}</small></div></div>`).join('');
+  document.getElementById('roomNote').value=state.roomNote||'';
 }
-function updateTraveler(i,v){state.travelers[i]=v.trim()||`旅伴 ${i+1}`;saveState();toast('姓名已更新')}
-roomNote.addEventListener('input',e=>{state.roomNote=e.target.value;saveState()});
+function updateTraveler(i,v){
+  if(!requireAdmin()){renderTravelers();return;}
+  state.travelers[i]=v.trim()||`旅伴 ${i+1}`;scheduleCloudSave();toast('姓名已同步');
+}
+document.getElementById('roomNote').addEventListener('input',e=>{
+  if(!isAdmin())return;state.roomNote=e.target.value;scheduleCloudSave();
+});
 
 function renderChecklist(){
-  checklist.innerHTML=state.checklist.map((x,i)=>`
-  <label class="check-item ${x.done?'done':''}"><input type="checkbox" ${x.done?'checked':''} onchange="toggleCheck(${i},this.checked)"><span>${escapeHtml(x.text)}</span></label>`).join('');
+  document.getElementById('checklist').innerHTML=state.checklist.map((x,i)=>`
+  <label class="check-item ${x.done?'done':''}"><input type="checkbox" ${x.done?'checked':''} ${isAdmin()?'':'disabled'} onchange="toggleCheck(${i},this.checked)"><span>${escapeHtml(x.text)}</span></label>`).join('');
 }
-function toggleCheck(i,v){state.checklist[i].done=v;saveState();renderChecklist()}
-function resetChecklist(){state.checklist=JSON.parse(JSON.stringify(defaults.checklist));saveState();renderChecklist();toast('清單已重設')}
+function toggleCheck(i,v){if(!requireAdmin()){renderChecklist();return;}state.checklist[i].done=v;renderChecklist();scheduleCloudSave();}
+function resetChecklist(){if(!requireAdmin())return;state.checklist=deepClone(defaults.checklist);renderChecklist();scheduleCloudSave();toast('清單已重設並同步');}
 
 function renderExpenses(){
-  const rate=parseFloat(state.rate)||4.74;
-  let total=0;
-  state.expenses.forEach(x=>total+=x.currency==='CNY'?x.amount:x.amount/rate);
-  totalCny.textContent=`¥${total.toFixed(2)}`;
-  perPerson.textContent=`¥${(total/6).toFixed(2)}`;
-  expenseList.innerHTML=state.expenses.length?state.expenses.map((x,i)=>`
+  const rate=parseFloat(state.rate)||4.74;let total=0;
+  state.expenses.forEach(x=>total+=x.currency==='CNY'?Number(x.amount):Number(x.amount)/rate);
+  document.getElementById('totalCny').textContent=`¥${total.toFixed(2)}`;
+  document.getElementById('perPerson').textContent=`¥${(total/6).toFixed(2)}`;
+  document.getElementById('expenseList').innerHTML=state.expenses.length?state.expenses.map((x,i)=>`
     <div class="expense"><div><strong>${escapeHtml(x.name)}</strong><small>${x.currency==='CNY'?'人民幣':'新台幣'}</small></div>
-    <div class="amount">${x.currency==='CNY'?'¥':'NT$'}${x.amount.toFixed(2)}<br><button class="link-btn" onclick="deleteExpense(${i})">刪除</button></div></div>`).join(''):'<div class="empty">還沒有支出紀錄。</div>';
+    <div class="amount">${x.currency==='CNY'?'¥':'NT$'}${Number(x.amount).toFixed(2)}${isAdmin()?`<br><button class="link-btn" onclick="deleteExpense(${i})">刪除</button>`:''}</div></div>`).join(''):'<div class="empty">還沒有支出紀錄。</div>';
 }
 function addExpense(){
-  const name=expenseName.value.trim();const amount=parseFloat(expenseAmount.value);
-  if(!name||!amount||amount<=0){toast('請輸入項目與正確金額');return}
-  state.expenses.push({name,amount,currency:expenseCurrency.value});
-  saveState();expenseName.value='';expenseAmount.value='';renderExpenses();toast('支出已新增');
+  if(!requireAdmin())return;
+  const name=document.getElementById('expenseName').value.trim();
+  const amount=parseFloat(document.getElementById('expenseAmount').value);
+  if(!name||!amount||amount<=0){toast('請輸入項目與正確金額');return;}
+  state.expenses.push({name,amount,currency:document.getElementById('expenseCurrency').value});
+  document.getElementById('expenseName').value='';document.getElementById('expenseAmount').value='';
+  renderExpenses();scheduleCloudSave();toast('支出已同步');
 }
-function deleteExpense(i){state.expenses.splice(i,1);saveState();renderExpenses()}
-function clearExpenses(){if(confirm('確定清空所有支出？')){state.expenses=[];saveState();renderExpenses()}}
-rate.addEventListener('change',e=>{state.rate=parseFloat(e.target.value)||4.74;saveState();renderExpenses()});
+function deleteExpense(i){if(!requireAdmin())return;state.expenses.splice(i,1);renderExpenses();scheduleCloudSave();}
+function clearExpenses(){if(!requireAdmin())return;if(confirm('確定清空所有支出？')){state.expenses=[];renderExpenses();scheduleCloudSave();}}
+document.getElementById('rate').addEventListener('change',e=>{
+  if(!isAdmin()){e.target.value=state.rate||4.74;return;}
+  state.rate=parseFloat(e.target.value)||4.74;renderExpenses();scheduleCloudSave();
+});
 
 function openMap(keyword){
   const url='https://uri.amap.com/search?keyword='+encodeURIComponent(keyword)+'&city=佛山&src=foshantrip';
   window.open(url,'_blank','noopener');
 }
-function escapeHtml(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function escapeAttr(s=''){return escapeHtml(s).replace(/`/g,'&#96;')}
-
+function escapeHtml(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function escapeAttr(s=''){return escapeHtml(s).replace(/`/g,'&#96;');}
 function updateCountdown(){
-  const now=new Date();const target=new Date('2026-08-10T14:10:00+08:00');
-  const diff=target-now;
-  if(diff>0){countdown.textContent=Math.ceil(diff/86400000);countdownLabel.textContent='天後出發'}
+  const now=new Date();const target=new Date('2026-08-10T14:10:00+08:00');const diff=target-now;
+  if(diff>0){document.getElementById('countdown').textContent=Math.ceil(diff/86400000);document.getElementById('countdownLabel').textContent='天後出發';}
   else{
     const end=new Date('2026-08-15T19:40:00+08:00');
-    if(now<=end){countdown.textContent='旅途中';countdownLabel.textContent='祝旅途愉快'}
-    else{countdown.textContent='已完成';countdownLabel.textContent='珍藏這趟回憶'}
+    if(now<=end){document.getElementById('countdown').textContent='旅途中';document.getElementById('countdownLabel').textContent='祝旅途愉快';}
+    else{document.getElementById('countdown').textContent='已完成';document.getElementById('countdownLabel').textContent='珍藏這趟回憶';}
   }
 }
-shareBtn.onclick=async()=>{
+
+document.getElementById('shareBtn').onclick=async()=>{
   const text='2026 佛山之旅｜8/10–8/15｜CI521 / CI522｜佛山希爾頓花園酒店｜6 人同行';
   try{
-    if(navigator.share)await navigator.share({title:'佛山之旅 2026',text});
-    else{await navigator.clipboard.writeText(text);toast('旅程摘要已複製')}
+    if(navigator.share)await navigator.share({title:'佛山之旅 2026',text,url:location.href});
+    else{await navigator.clipboard.writeText(location.href);toast('網址已複製');}
   }catch(e){}
-}
-exportBtn.onclick=()=>{
+};
+document.getElementById('exportBtn').onclick=()=>{
   const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='佛山之旅_備份.json';a.click();URL.revokeObjectURL(a.href);
-}
-importInput.onchange=async e=>{
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='佛山之旅_雲端備份.json';a.click();URL.revokeObjectURL(a.href);
+};
+document.getElementById('importInput').onchange=async e=>{
+  if(!requireAdmin())return;
   const file=e.target.files[0];if(!file)return;
-  try{const data=JSON.parse(await file.text());state={...defaults,...data};saveState();init();toast('資料已匯入')}
-  catch(err){toast('匯入失敗：檔案格式不正確')}
+  try{
+    const data=JSON.parse(await file.text());
+    state={...deepClone(defaults),...data,selectedDay:state.selectedDay||0};renderAll();scheduleCloudSave();toast('資料已匯入並同步');
+  }catch(err){toast('匯入失敗：檔案格式不正確');}
+  e.target.value='';
+};
+
+function openLoginModal(){
+  document.getElementById('loginPassword').value='';
+  document.getElementById('loginModal').classList.add('open');
+  setTimeout(()=>document.getElementById('loginEmail').focus(),100);
 }
-function init(){
-  updateCountdown();renderDays();renderTravelers();renderChecklist();
-  rate.value=state.rate||4.74;roomNote.value=state.roomNote||'';renderExpenses();
+function closeLoginModal(){document.getElementById('loginModal').classList.remove('open');}
+async function adminLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const password=document.getElementById('loginPassword').value;
+  if(!email||!password){toast('請輸入 Email 和密碼');return;}
+  const btn=document.getElementById('loginSubmitBtn');btn.disabled=true;btn.textContent='登入中…';
+  try{
+    await signInWithEmailAndPassword(auth,email,password);
+    const snap=await getDoc(tripRef);
+    if(!snap.exists()){
+      await setDoc(tripRef,{state:cloudState(),updatedAt:serverTimestamp(),updatedBy:email});
+      cloudExists=true;toast('已建立第一份雲端旅程資料');
+    }else{toast('管理員登入成功');}
+    closeLoginModal();
+  }catch(err){console.error(err);toast(friendlyError(err));}
+  finally{btn.disabled=false;btn.textContent='登入';}
 }
-if('serviceWorker' in navigator && location.protocol!=='file:')navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+async function handleAuthButton(){
+  if(isAdmin()){
+    if(confirm('確定登出管理員模式？')){await signOut(auth);toast('已登出，現在是唯讀模式');}
+  }else openLoginModal();
+}
+document.getElementById('authBtn').onclick=handleAuthButton;
+document.getElementById('loginModal').addEventListener('click',e=>{if(e.target.id==='loginModal')closeLoginModal();});
+document.getElementById('loginPassword').addEventListener('keydown',e=>{if(e.key==='Enter')adminLogin();});
+
+onAuthStateChanged(auth,user=>{
+  applyAdminUI();renderAll();
+  if(user)setCloudStatus(cloudConnected?'online':'','管理員已登入');
+});
+
+onSnapshot(tripRef,snap=>{
+  cloudConnected=true;cloudExists=snap.exists();
+  if(snap.exists()){
+    const data=snap.data();const currentDay=state.selectedDay||0;
+    applyingRemote=true;
+    state={...deepClone(defaults),...(data.state||{}),selectedDay:Math.min(currentDay,(data.state?.days?.length||defaults.days.length)-1)};
+    lastUpdatedAt=data.updatedAt||null;localSave();renderAll();applyingRemote=false;
+    setCloudStatus('online',isAdmin()?'已同步雲端':'顯示最新行程');
+    document.getElementById('syncMeta').textContent=lastUpdatedAt?`雲端最後更新：${formatTimestamp(lastUpdatedAt)}`:'';
+  }else{
+    setCloudStatus(isAdmin()?'saving':'','雲端資料尚未建立');
+    document.getElementById('syncMeta').textContent='管理員首次登入後，系統會把目前行程建立到雲端。';
+  }
+},err=>{
+  console.error(err);cloudConnected=false;setCloudStatus('error','無法讀取雲端');
+  document.getElementById('syncMeta').textContent=friendlyError(err);
+});
+
+function init(){updateCountdown();renderAll();}
+if('serviceWorker' in navigator && location.protocol!=='file:'){
+  navigator.serviceWorker.register('./service-worker.js').catch(console.warn);
+}
 init();
+
+Object.assign(window,{
+  switchTab,selectDay,openEventModal,closeEventModal,saveEvent,deleteEvent,
+  updateTraveler,toggleCheck,resetChecklist,addExpense,deleteExpense,clearExpenses,
+  openMap,openLoginModal,closeLoginModal,adminLogin
+});
 </script>
 </body>
 </html>

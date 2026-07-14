@@ -1,7 +1,8 @@
 {
-  "name": "佛山之旅 2026",
+  "name": "佛山之旅 2026｜雲端同步版",
   "short_name": "佛山之旅",
-  "start_url": "./index.html",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#f6f1e8",
   "theme_color": "#12372A",
