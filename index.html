@@ -7,7 +7,7 @@
   <meta name="description" content="2026 佛山之旅：雲端同步航班、住宿、行程、旅伴與共同記帳。" />
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" href="icon-192.png" />
-  <title>佛山之旅 2026｜雲端同步版</title>
+  <title>佛山之旅 2026｜六天五夜修正版</title>
   <style>
     :root{
       --ink:#173329; --muted:#6f7f78; --green:#12372A; --green2:#2f6a54;
@@ -249,6 +249,15 @@
 
     <section id="plan">
       <div class="section-head"><div><h2>每日行程</h2><p>管理員修改後會即時同步給所有裝置</p></div></div>
+      <div class="card">
+        <div class="card-label">SIX DAYS · FIVE NIGHTS</div>
+        <div style="font-weight:900;margin-top:5px">六天五夜完整建議行程</div>
+        <p class="note" style="margin-bottom:0">按下套用時，只會更新 6 天的每日行程；同行人員姓名、住宿備註、共同記帳與行前清單都會保留。</p>
+        <div class="action-row">
+          <button class="btn admin-only" onclick="applyRecommendedItinerary()">套用完整行程並同步</button>
+          <span id="itineraryVersionText" class="tag">正在確認行程版本…</span>
+        </div>
+      </div>
       <div class="day-tabs" id="dayTabs"></div>
       <div class="card" id="dayContent"></div>
     </section>
@@ -366,41 +375,13 @@ const db = getFirestore(app);
 const tripRef = doc(db, 'trips', 'foshan2026');
 setPersistence(auth, browserLocalPersistence).catch(console.warn);
 
+const ITINERARY_VERSION = "2026-07-14-six-days-v2-fengjian";
+const recommendedDays = [{"date":"08/10","weekday":"星期一","title":"抵達佛山・寰宇城","events":[{"time":"14:10","title":"CI 521 台北飛廣州","note":"桃園機場第 2 航廈出發；Airbus A330-300。","map":"桃園國際機場 T2"},{"time":"16:15","title":"抵達廣州白雲機場","note":"第 2 航廈；完成入境、領取行李後，7 人集合再出發。","map":"廣州白雲國際機場 T2"},{"time":"17:30","title":"搭車前往佛山","note":"建議叫 2 台車或預約 7 人商務車；晚高峰車程請保留彈性。","map":"佛山希爾頓花園酒店"},{"time":"19:00","title":"入住佛山希爾頓花園酒店","note":"連住 5 晚；先放行李、稍作休息。","map":"佛山希爾頓花園酒店"},{"time":"20:00","title":"中海寰宇城晚餐","note":"第一晚安排住處附近輕鬆用餐；推薦粵菜、燒臘、啫啫煲或糖水，餐後可採買飲水與早餐用品。","map":"佛山中海寰宇城"},{"time":"21:30","title":"返回飯店休息","note":"不安排遠距離景點，為隔天保留體力。","map":"佛山希爾頓花園酒店"}]},{"date":"08/11","weekday":"星期二","title":"廣式早茶・祖廟・嶺南天地・功夫夜市","events":[{"time":"10:00","title":"從飯店出發","note":"前往祖廟商圈；7 人同行建議以滴滴 2 台車或商務車移動。","map":"佛山皇冠假日酒店"},{"time":"10:30","title":"廣式早茶","note":"主選：佛山皇冠假日酒店明暉樓／中餐廳，環境舒適、適合 7 人訂位。推薦蝦餃、燒賣、鳳爪、腸粉、叉燒包、流沙包；想體驗懷舊茶樓可改金源酒家。","map":"佛山皇冠假日酒店 明暉樓 早茶"},{"time":"12:30","title":"佛山祖廟博物館","note":"參觀祖廟古建築、黃飛鴻紀念館與葉問堂；表演時間可能調整，入園後先確認當日醒獅／武術場次。","map":"佛山祖廟博物館"},{"time":"14:15","title":"醒獅／武術表演（以現場公告為準）","note":"建議提早 15–20 分鐘到表演區；下雨可能取消。","map":"佛山祖廟 黃飛鴻紀念館"},{"time":"15:30","title":"嶺南天地 City Walk","note":"逛騎樓街巷、文創店、咖啡店與特色建築；午後可安排甜品或飲料休息。","map":"佛山嶺南天地"},{"time":"18:00","title":"晚餐｜毋米粥或老佛山粵菜","note":"推薦太艮堡毋米粥（嶺南天地店）；可點魚片、海鮮、肉類、油條與青菜。備選：有記餐廳或南記食粥坊，7 人建議提前訂位。","map":"太艮堡毋米粥 嶺南天地店"},{"time":"20:30","title":"佛山創意產業園・功夫夜市","note":"舊工廠改造街區，晚上有市集、餐飲與燈光氛圍；晚餐後以散步、拍照和少量小吃為主。","map":"佛山創意產業園 功夫夜市"},{"time":"22:30","title":"返回飯店","note":"如同行者疲累，可於嶺南天地晚餐後直接回飯店。","map":"佛山希爾頓花園酒店"}]},{"date":"08/12","weekday":"星期三","title":"逢簡水鄉・順德小吃・沃爾瑪・寰宇城","events":[{"time":"10:00","title":"從飯店出發前往逢簡水鄉","note":"7 人建議預約商務車或分乘 2 台滴滴；車程依路況約 1 小時以上，請準時集合。","map":"順德逢簡水鄉"},{"time":"11:15","title":"逢簡水鄉散步","note":"沿河欣賞古橋、祠堂與水鄉街巷；可依天氣與體力選擇短程遊船。","map":"順德逢簡水鄉"},{"time":"12:45","title":"水鄉順德小吃午餐","note":"可少量分食雙皮奶、魚餅、牛雜、倫教糕、炸牛奶與當地家常菜；7 人用餐建議先找可坐一桌的餐館。","map":"逢簡水鄉 美食"},{"time":"14:15","title":"古橋與河岸自由活動","note":"拍照、喝飲料或購買小吃；8 月較熱，建議安排室內休息並補充水分。","map":"逢簡水鄉 金鰲橋"},{"time":"15:30","title":"返回南海桂城","note":"提早離開可避開部分傍晚車潮；車程依路況彈性調整。","map":"沃爾瑪 南海印象匯店"},{"time":"17:15","title":"沃爾瑪採買","note":"安排南海印象匯店，購買飲料、零食、水果、伴手禮與旅途中用品。","map":"沃爾瑪 南海印象匯店"},{"time":"19:00","title":"寰宇城晚餐／自由活動","note":"推薦桑拿雞、煲仔飯、順德菜或糖水；晚餐後可直接返回飯店。","map":"佛山中海寰宇城"},{"time":"21:00","title":"返回飯店","note":"這天以水鄉散步、順德小吃和採買為主，不再安排其他遠程景點。","map":"佛山希爾頓花園酒店"}]},{"date":"08/13","weekday":"星期四","title":"南海萬達・千燈湖・燈湖西街夜市","events":[{"time":"10:30","title":"南海萬達廣場","note":"上午逛街、咖啡與室內活動；商場通常 10:00 後營業，適合避開中午暑熱。","map":"佛山南海萬達廣場"},{"time":"12:30","title":"南海萬達午餐","note":"商場內自由選擇粵菜、順德菜、火鍋或茶餐廳；7 人建議先在大眾點評／高德查看可訂位餐廳。","map":"佛山南海萬達廣場 美食"},{"time":"15:00","title":"返回飯店午休","note":"8 月下午較悶熱，保留 1.5–2 小時休息；雨天也可延長萬達行程。","map":"佛山希爾頓花園酒店"},{"time":"17:00","title":"千燈湖公園散步","note":"傍晚入園較舒適；沿湖散步、拍照，等候天色轉暗。","map":"佛山千燈湖公園"},{"time":"18:30","title":"燈湖西街夜市晚餐（千燈湖旁）","note":"這就是千燈湖旁的熱門夜市；可分食燒烤、小吃、海鮮、甜品與飲品，建議少量多樣。","map":"燈湖西街 保利MALL"},{"time":"20:15","title":"千燈湖燈光／水景表演（視當日公告）","note":"表演場次可能因天氣、維護或活動調整；若停演，就改為湖畔夜景散步。","map":"千燈湖市民廣場"},{"time":"21:30","title":"返回飯店","note":"千燈湖與飯店距離近，可依體力決定步行或叫車。","map":"佛山希爾頓花園酒店"}]},{"date":"08/14","weekday":"星期五","title":"順德尋味一日遊","events":[{"time":"10:00","title":"從飯店出發前往順德大良","note":"7 人建議預約商務車或分乘 2 台滴滴；路程較遠，請準時集合。","map":"順德清暉園博物館"},{"time":"11:15","title":"清暉園博物館","note":"參觀嶺南園林、滿洲窗、亭台與水景；熱門時段可能需要預約或排隊。","map":"順德清暉園博物館"},{"time":"12:45","title":"華蓋路步行街・順德小吃午餐","note":"推薦雙皮奶、牛雜、魚皮、倫教糕、炸牛奶與腸粉；採『少量多店』方式，留胃給晚餐。","map":"順德華蓋路步行街"},{"time":"14:30","title":"金榜上街・水牛奶甜品","note":"尋找水牛奶、薑撞奶、牛乳片與鮮奶燉蛋；巷弄較窄，7 人注意集合位置。","map":"順德金榜上街"},{"time":"16:30","title":"順峰山公園（體力許可）","note":"看大型牌坊與湖景；若天氣太熱或下雨，可取消並改在大良商圈喝下午茶。","map":"順德順峰山公園"},{"time":"18:30","title":"順德菜晚餐","note":"推薦香雲軒・順德菜（清暉園附近）等可訂位餐廳；可點燒鵝、魚、煎焗菜、老火湯與時蔬。魚生屬生食，腸胃敏感者不建議勉強嘗試。","map":"香雲軒 順德菜 清暉園"},{"time":"20:15","title":"返回佛山桂城","note":"晚餐後直接回飯店，避免行程過晚。","map":"佛山希爾頓花園酒店"}]},{"date":"08/15","weekday":"星期六","title":"寰宇城早午餐・返台","events":[{"time":"09:30","title":"整理行李與確認證件","note":"確認護照／台胞證、行動電源、伴手禮與托運限制。","map":""},{"time":"11:00","title":"寰宇城早午餐","note":"選擇清淡粵菜、粥麵或點心；避免臨飛前吃太油膩。","map":"佛山中海寰宇城"},{"time":"12:00","title":"飯店退房・領取行李","note":"退房時間以訂房確認單為準；再次確認 7 人行李件數。","map":"佛山希爾頓花園酒店"},{"time":"13:00","title":"前往廣州白雲機場","note":"國際／兩岸航班建議預留充足報到與安檢時間；跨城交通遇塞車可能延長。","map":"廣州白雲國際機場 T2"},{"time":"14:30","title":"抵達機場・辦理登機","note":"第 2 航廈；完成托運、安檢後再安排免稅店或候機用餐。","map":"廣州白雲國際機場 T2"},{"time":"17:30","title":"CI 522 廣州飛台北","note":"白雲機場第 2 航廈出發；Airbus A330-300。","map":"廣州白雲國際機場 T2"},{"time":"19:40","title":"抵達台北","note":"桃園機場第 2 航廈。","map":"桃園國際機場 T2"}]}];
+
 const defaults = {
   selectedDay: 0,
-  days: [
-    {date:'08/10',weekday:'星期一',title:'抵達佛山',events:[
-      {time:'14:10',title:'CI 521 台北飛廣州',note:'桃園機場第 2 航廈出發',map:''},
-      {time:'16:15',title:'抵達廣州白雲機場',note:'第 2 航廈；領取行李後前往佛山',map:'廣州白雲國際機場 T2'},
-      {time:'19:00',title:'入住佛山希爾頓花園酒店',note:'5 晚不換飯店',map:'佛山希爾頓花園酒店'},
-      {time:'20:00',title:'寰宇城或附近商場晚餐',note:'第一晚以飯店／住家附近輕鬆用餐為主',map:'佛山中海寰宇城'}
-    ]},
-    {date:'08/11',weekday:'星期二',title:'祖廟・嶺南天地',events:[
-      {time:'10:30',title:'從飯店出發',note:'依旅程偏好，早上不排太趕',map:'佛山希爾頓花園酒店'},
-      {time:'11:15',title:'佛山祖廟',note:'傳統建築與佛山文化景點',map:'佛山祖廟'},
-      {time:'14:30',title:'嶺南天地散步',note:'老街建築、咖啡店與餐飲，可一路逛到晚餐',map:'佛山嶺南天地'},
-      {time:'18:30',title:'晚餐',note:'餐廳可之後補上',map:'佛山嶺南天地'}
-    ]},
-    {date:'08/12',weekday:'星期三',title:'千燈湖・南海萬達',events:[
-      {time:'10:30',title:'從飯店出發',note:'千燈湖與飯店距離近，可安排悠閒散步',map:'佛山希爾頓花園酒店'},
-      {time:'11:00',title:'千燈湖公園',note:'白天散步、拍照',map:'佛山千燈湖公園'},
-      {time:'14:30',title:'南海萬達廣場',note:'逛街、下午茶與晚餐備選',map:'佛山南海萬達廣場'},
-      {time:'19:30',title:'千燈湖夜景',note:'晚上再回湖區散步看夜景',map:'佛山千燈湖'}
-    ]},
-    {date:'08/13',weekday:'星期四',title:'自由安排日',events:[
-      {time:'10:30',title:'從飯店出發',note:'保留給親友聚會或臨時調整',map:'佛山希爾頓花園酒店'}
-    ]},
-    {date:'08/14',weekday:'星期五',title:'彈性備用日',events:[
-      {time:'10:30',title:'從飯店出發',note:'可補前幾天沒走完的行程、購物或聚餐',map:'佛山希爾頓花園酒店'}
-    ]},
-    {date:'08/15',weekday:'星期六',title:'返台',events:[
-      {time:'10:30',title:'退房前整理行李',note:'確認證件、行李與伴手禮',map:''},
-      {time:'12:00',title:'飯店退房',note:'退房時間請以訂房確認單為準',map:'佛山希爾頓花園酒店'},
-      {time:'14:00',title:'前往白雲機場',note:'預留跨城交通與辦理登機時間',map:'廣州白雲國際機場 T2'},
-      {time:'17:30',title:'CI 522 廣州飛台北',note:'白雲機場第 2 航廈出發',map:'廣州白雲國際機場 T2'},
-      {time:'19:40',title:'抵達台北',note:'桃園機場第 2 航廈',map:'桃園國際機場 T2'}
-    ]}
-  ],
+  itineraryVersion: ITINERARY_VERSION,
+  days: recommendedDays,
   travelers:['旅伴 1','旅伴 2','旅伴 3','旅伴 4','旅伴 5','旅伴 6','旅伴 7'],
   roomNote:'',
   checklist:[
@@ -481,6 +462,10 @@ function renderAll(){
   document.getElementById('rate').value=state.rate||4.74;
   document.getElementById('roomNote').value=state.roomNote||'';
   renderExpenses();applyAdminUI();
+  const versionEl=document.getElementById('itineraryVersionText');
+  if(versionEl){
+    versionEl.textContent=state.itineraryVersion===ITINERARY_VERSION?'已套用最新版行程':'尚未套用最新版';
+  }
 }
 function applyAdminUI(){
   const admin=isAdmin();
@@ -497,6 +482,17 @@ function switchTab(id){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 document.querySelectorAll('.nav-btn').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+
+function applyRecommendedItinerary(){
+  if(!requireAdmin())return;
+  const message='確定套用六天五夜完整行程？\n\n只會更換每日行程，同行名單、住宿備註、共同記帳與行前清單都會保留。';
+  if(!confirm(message))return;
+  const currentDay=state.selectedDay||0;
+  state.days=deepClone(recommendedDays);
+  state.itineraryVersion=ITINERARY_VERSION;
+  state.selectedDay=Math.min(currentDay,state.days.length-1);
+  renderAll();scheduleCloudSave();toast('六天五夜行程已套用並同步');
+}
 
 function renderDays(){
   const tabs=document.getElementById('dayTabs');
@@ -628,7 +624,14 @@ document.getElementById('importInput').onchange=async e=>{
   const file=e.target.files[0];if(!file)return;
   try{
     const data=JSON.parse(await file.text());
-    state=ensureTravelerCount({...deepClone(defaults),...data,selectedDay:state.selectedDay||0});renderAll();scheduleCloudSave();toast('資料已匯入並同步');
+    if(data.updateType==='itinerary-only' && Array.isArray(data.days)){
+      const currentDay=state.selectedDay||0;
+      state={...state,days:deepClone(data.days),itineraryVersion:data.itineraryVersion||ITINERARY_VERSION,selectedDay:Math.min(currentDay,data.days.length-1)};
+      renderAll();scheduleCloudSave();toast('每日行程已匯入並同步；同行名單保持不變');
+    }else{
+      state=ensureTravelerCount({...deepClone(defaults),...data,selectedDay:state.selectedDay||0});
+      renderAll();scheduleCloudSave();toast('完整資料已匯入並同步');
+    }
   }catch(err){toast('匯入失敗：檔案格式不正確');}
   e.target.value='';
 };
@@ -696,7 +699,7 @@ init();
 Object.assign(window,{
   switchTab,selectDay,openEventModal,closeEventModal,saveEvent,deleteEvent,
   updateTraveler,toggleCheck,resetChecklist,addExpense,deleteExpense,clearExpenses,
-  openMap,openLoginModal,closeLoginModal,adminLogin
+  openMap,openLoginModal,closeLoginModal,adminLogin,applyRecommendedItinerary
 });
 </script>
 </body>

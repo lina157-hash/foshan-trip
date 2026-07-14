@@ -1,23 +1,18 @@
-佛山之旅｜Firebase 雲端同步版
+佛山之旅 2026｜六天五夜修正版
 
-上傳方式：
-1. 解壓縮 ZIP。
-2. 到 GitHub 儲存庫 lina157-hash/foshan-trip。
-3. Add file → Upload files。
-4. 上傳本資料夾內的 index.html、manifest.json、service-worker.js、icon-192.png、icon-512.png，覆蓋舊檔。
-5. Commit changes。
-6. 等候 GitHub Pages 重新部署，開啟 https://lina157-hash.github.io/foshan-trip/
+本次調整：
+- 移除南風古灶、石灣陶藝與陶瓷博物館。
+- 8/12 改為逢簡水鄉、順德小吃、沃爾瑪及寰宇城。
+- 8/13 保留千燈湖，並明確標示「燈湖西街夜市（千燈湖旁）」。
+- 同行名單、住宿備註、共同記帳與行前清單不會被覆蓋。
 
-首次使用：
-1. 打開網站，按「管理員登入」。
-2. 輸入 Firebase Authentication 建立的 Email 與密碼。
-3. 若 Firestore 尚無 trips/foshan2026，系統會自動建立第一份雲端資料。
-4. 之後每次修改都會自動同步，其他裝置會即時更新。
+更新方式：
+1. 將資料夾內的 index.html、manifest.json、service-worker.js、icon-192.png、icon-512.png
+   上傳至 lina157-hash/foshan-trip 儲存庫根目錄並覆蓋舊檔。
+2. 等待 GitHub Pages 更新後，開啟 https://lina157-hash.github.io/foshan-trip/
+3. 使用 Firebase 管理員帳號登入。
+4. 進入「行程」，按「套用完整行程並同步」。
+5. 系統只更新每日行程；旅伴姓名保持不變。
 
-安全：
-- firebaseConfig 可放在前端；寫入權限由 Authentication 與 Firestore Rules 控制。
-- 不要把管理員密碼上傳 GitHub 或傳給他人。
-- Firestore 規則必須只允許指定 UID 寫入。
-
-
-本版已將同行人數改為 7 人，並會在管理員登入後把既有 6 人雲端資料自動補上「旅伴 7」。共同記帳的平均每人金額會依旅伴名單人數自動計算。
+備用：
+- 也可在新版 APP 中按「匯入並同步」，選擇「佛山六天五夜行程_修正版_僅更新行程.json」。

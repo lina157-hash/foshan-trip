@@ -1,8 +1,7 @@
 {
-  "name": "佛山之旅 2026｜雲端同步版（7人）",
+  "name": "佛山之旅 2026｜六天五夜修正版",
   "short_name": "佛山之旅",
-  "start_url": "./",
-  "scope": "./",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f6f1e8",
   "theme_color": "#12372A",

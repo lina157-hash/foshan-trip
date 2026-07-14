@@ -1,4 +1,4 @@
-const CACHE='foshan-trip-cloud-v4-seven';
+const CACHE='foshan-trip-cloud-v6-fengjian';
 const STATIC=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',event=>{
   self.skipWaiting();
@@ -16,12 +16,17 @@ self.addEventListener('fetch',event=>{
   if(url.origin!==self.location.origin)return;
   if(request.mode==='navigate'){
     event.respondWith(fetch(request).then(response=>{
-      const copy=response.clone();caches.open(CACHE).then(cache=>cache.put('./index.html',copy));return response;
+      const copy=response.clone();
+      caches.open(CACHE).then(cache=>cache.put('./index.html',copy));
+      return response;
     }).catch(()=>caches.match('./index.html')));
     return;
   }
   event.respondWith(caches.match(request).then(cached=>{
-    const network=fetch(request).then(response=>{if(response.ok)caches.open(CACHE).then(cache=>cache.put(request,response.clone()));return response;});
+    const network=fetch(request).then(response=>{
+      if(response.ok)caches.open(CACHE).then(cache=>cache.put(request,response.clone()));
+      return response;
+    });
     return cached||network;
   }));
 });
